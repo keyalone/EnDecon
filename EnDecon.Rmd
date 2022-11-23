@@ -1,0 +1,376 @@
+# EnDecon: Quick Start
+
+Do you like to live in the fast lane? Do you sigh every time you see a long vignette? Do you wish there was a TLDR on everything?
+
+I understand.
+
+Welcome to the EnDecon quick start!
+
+In this vignette, you will find a **very** short guide on how to work with EnDecon. EnDecon provides several functions and datasets for the deconvolution of spatial transcriptomic data.
+
+For all intents and purposes, this is a dummy data set and should only be used to get a feel for the EnDecon package. We strongly advise you to use real and complete data sets to fully understand the EnDecon package and its benefits.
+
+# Introduction
+
+EnDecon applies ensemble learning for the deconvolution of spatial transcriptomic data. EnDecon integrates multiple base deconvolution results using a weighted optimization model to generate a more accurate result.
+
+EnDecon mainly includes two steps: (1) running each base deconvolution method individually to obtain the base cell type deconvolution results, and (2) integrating these base deconvolution results into a better deconvolution result using a new proposed ensemble strategy. EnDecon obtains the ensemble result by alternatively updating the ensemble result as a weighted median of the base deconvolution results and the weights of base results based on their distance from the ensemble result.
+
+# Loading and Pre-processing
+
+First, let's load the package and the data. We focus on human breast cancer data from ST technology (Section D1 of patient D), and use breast cancer scRNA-seq data from 10X Chromium protocol as reference. The SRT data consists of three annotated regions (connective tissue (CT), immune infiltrate (II) and invasive cancer (IC) regions) and one undetermined (UN) region, annotated by a pathologist based on the morphology of the associated H&E staining. The data are available at the [Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>). Aftet filtering low-quality genes and cells, a final set of 11920 genes and 306 spots for SRT data and 11920 genes and 3024 cells for scRNA-seq data are included.
+
+|  Cell type   | Number of cells |
+|:------------:|:---------------:|
+|   B cells    |       162       |
+|  Epithelial  |       441       |
+|   Myeloid    |       385       |
+|   T cells    |      1473       |
+|     CAFs     |       106       |
+| Endothelial  |       210       |
+| Plasmablasts |       175       |
+|     PVL      |       72        |
+
+For data process of the dataset, include reference scRNA-seq data, cell type annotation, spatial transcriptomic data and spot location, users could use the data_process function as following:
+
+```{r loading, eval = TRUE, echo = TRUE}
+suppressMessages(library(EnDecon))
+data("breast.sc.ref")
+data("breast.sc.cell.label")
+data("breast.st")
+data("breast.st.loc")
+database <- data_process(sc_exp = breast.sc.ref, sc_label = breast.sc.cell.label,spot_exp = breast.st, spot_loc = breast.st.loc)
+```
+
+# Run base deconvolution methods
+
+The current implementation of EnDecon combines fourteen state-of-the- art cell type deconvolution methods (consisting of methods designed for both bulk RNA-seq and scRNA-seq dataset): CARD, Cell2location, DeconRNASeq, DWLS, SVR, MuSiC, RCTD, SCDC, SpatialDWLS, SPOTlight, Stereoscope, STdeconvolve and DestVI. We summarizes the accuracy, including PCC, RMSE and JSD, and running times of the base deconvolution methods for simulation data in our supplementary material. Users could run all methods or choose several methods for the ensemble learning.
+
+```{r loading, eval = TRUE, echo = TRUE}
+# we advise user should construct the python env by anaconda and give the path to the #"python_env" parameter.
+python_env <- "~/.conda/envs/EnDecon_GPU/bin/python"
+Results.dec.mouse <- EnDecon_individual_methods(sc_exp = breast.sc.ref, sc_label = breast.sc.cell.label, spot_exp = breast.st, spot_loc = breast.st.loc, python_env = python_env,
+use_gpu = TRUE,gene_det_in_min_cells_per = 0.01, RCTD.CELL_MIN_INSTANCE = 5, saving_results = FALSE)
+```
+
+# Ensemble learning
+
+Ensemble learning based on the base deconvolution results
+
+```{r loading, eval = TRUE, echo = TRUE}
+pred.weight.ensemble <- Sys.time()
+Results <- solve_ensemble(Results.Deconv = Results.dec.mouse[[1]], lambda = NULL, prob.quantile = 0.5)
+end.weight.ensemble <- Sys.time()
+time.weight.ensemble <- difftime(end.weight.ensemble, pred.weight.ensemble, units = "mins")
+Results.dec.mouse[[1]]$EnDecon <- Results$H_norm
+Results.dec.mouse[[2]] <- c(Results.dec.mouse[[2]], time.weight.ensemble)
+# resort the methods 
+# consistent with the picture in article
+method_index <- c(1, 2, 3, 4, 5, 8, 7, 9, 10, 11, 12, 14, 13, 6, 15)
+method_names <- c("CARD", "Cell2location", "DeconRNASeq", "DestVI", "DWLS", "MuSiC all gene", 
+                  "MuSiC weighted", "RCTD", "SCDC", "SpatialDWLS", "SPOTlight", 
+                  "STdeconvolve", "Stereoscope", "SVR", "EnDecon")
+Results.dec.mouse[[1]] <- Results.dec.mouse[[1]][method_index]
+names(Results.dec.mouse[[1]]) <- method_names
+Results.dec.mouse[[2]] <- Results.dec.mouse[[2]][method_index]
+names(Results.dec.mouse[[2]]) <- method_names
+```
+
+# Visualization
+
+Visualization of the cell type abundance in each spots of EnDecon
+
+```{r EnDecon_pie,eval = TRUE, echo = TRUE,fig.height = 5, fig.width = 7}
+library(RColorBrewer)
+library(ggplot2)
+library(scatterpie)
+library(cowplot)
+library(gridExtra)
+library(viridis)
+library(ggpubr)
+library(rstatix)
+
+EnDecon_res = Results.dec.mouse[[1]]
+EnDecon = EnDecon_res$EnDecon
+celltype = colnames(EnDecon)
+# celltype
+
+spot_loc = breast.st.loc
+data("breast.spot.annotation")
+spot_loc$region = breast.spot.annotation
+spot_exp = breast.st
+
+#setting the color
+qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector  <-  unlist(mapply(brewer.pal, qual_col_pals$maxcolors, 
+                              rownames(qual_col_pals)))
+col_low <- "green"; col_high <- "red"
+
+########### pie plot of EnDecon ###############
+piedata_temp <- data.frame(x = spot_loc$x, y= spot_loc$y,
+                           group =factor(1:length(spot_loc$x)))
+
+pos_pie = as.data.frame(EnDecon)
+
+piedata = cbind(piedata_temp,pos_pie)
+##########
+col_df <- data.frame(cell_types = celltype,
+                     col_vector = col_vector[1:length(celltype)])
+
+p1 = ggplot() + geom_scatterpie(aes(x=x, y=y, group=group),
+                                cols= names(piedata)[-1:-3],
+                                data = piedata,color=NA,
+                                pie_scale = 1.3)+
+  coord_equal() +theme_bw()+
+  labs(y=" ",x=" ",title =" ")+
+  theme(axis.ticks.x  = element_blank(), 
+        axis.ticks.y  = element_blank(), 
+        axis.text.x.bottom =element_blank(), 
+        axis.text.y.left = element_blank(), 
+        legend.text = element_text(size = 12,angle= 0.5), 
+        legend.title = element_blank(), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_blank())
+
+p2 = p1 + scale_fill_manual(values = col_df$col_vector,
+                            breaks = col_df$cell_types)
+# save picture
+#ggsave(p2 , file='pirchart.pdf',width = 7, height = 5) 
+print(p2)
+########### pie plot of EnDecon ###############
+```
+
+Visualization of the cell type abundance in each spots of base deconvolution methods
+
+```{r base_deconv_pie,eval = TRUE, echo = TRUE,fig.height = 12, fig.width = 16}
+########### pie plot of base deconvolution methods ###############
+name_EnDecon = names(EnDecon_res)
+plots =list()
+for(i in 1: length(EnDecon_res)){
+  
+  pos_pie = as.data.frame(EnDecon_res[[i]])
+  
+  piedata = cbind(piedata_temp,pos_pie)
+  ##########
+  col_df <- data.frame(cell_types = celltype,
+                       col_vector = col_vector[1:length(celltype)])
+  
+  plots[[i]] = ggplot() + geom_scatterpie(aes(x=x, y=y, group=group),
+                                          cols= names(piedata)[-1:-3],
+                                          data = piedata,color=NA,
+                                          pie_scale = 1.3)+
+    coord_equal() +theme_bw()+
+    labs(y=" ",x=" ",title = name_EnDecon[i])+
+    theme(axis.ticks.x  = element_blank(), 
+          axis.ticks.y  = element_blank(), 
+          axis.text.x.bottom =element_blank(), 
+          axis.text.y.left = element_blank(),
+          plot.title = element_text( size=14,hjust = 0.5),
+          legend.position = "none",
+          legend.text = element_blank(),
+          legend.title = element_blank(), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.line = element_blank())+ 
+    scale_fill_manual(values = col_df$col_vector,
+                      breaks = col_df$cell_types) 
+}
+pfig = plot_grid(plotlist = plots,nrow = 4)
+#save picture
+#ggsave(pfig , file='pirchartall_mean.pdf',width = 16, height = 12) 
+print(pfig)
+########### pie plot of base deconvolution methods ###############
+```
+
+Visualization of the comparisons of predicted cell type proportions of EnDecon in cancer, connective and immune regions
+
+```{r com_region,eval = TRUE, echo = TRUE,fig.height = 8, fig.width = 14}
+anno_type = names(table(spot_loc[,3]))
+ind_caner = which(spot_loc[,3] == anno_type[3])
+ind_conn = which(spot_loc[,3] == anno_type[1])
+ind_immu = which(spot_loc[,3] == anno_type[2]) 
+#wilcox.test()
+pval = matrix(NA, length(celltype), 3)
+rownames(pval) = celltype
+colnames(pval) = c("caner_conn","caner_immu","conn_immu")
+plotreg = list()
+for( k in 1: length(celltype)){
+  # print(k)
+  cell_type_prop = EnDecon[,celltype[k]]
+  cancer_prop  = cell_type_prop[ind_caner]
+  conn_prop = cell_type_prop[ind_conn ]
+  immu_prop = cell_type_prop[ind_immu ]
+  pval[k,1] = wilcox.test( cancer_prop ,conn_prop)$p.value
+  pval[k,2] = wilcox.test( cancer_prop ,immu_prop )$p.value
+  pval[k,3] = wilcox.test( conn_prop ,immu_prop )$p.value
+  region = c("Cancer","Connective","Immune")
+  reg_lable =  rep(region,c(length(cancer_prop),length(conn_prop)
+                            ,length(immu_prop )))
+  data_regcan = data.frame(porp = c(cancer_prop,conn_prop,immu_prop),
+                           type = factor(reg_lable,
+                                         levels = region ))
+  # Wilcox test
+  stat.test <- data_regcan %>%
+    wilcox_test(porp ~ type) %>%
+    add_significance()
+  bxp <- ggboxplot(data_regcan, x = "type", y = "porp", fill = "type", 
+                   palette = c("#d9b1f0", "#FF99CC", "#a1e9f0"))+
+    theme_classic()+
+    labs(y="",x=" ",title = celltype[k])+
+    theme(
+      axis.text.x.bottom = element_text(size = 14,hjust = 0.5,angle = 0), 
+      axis.text.y.left = element_text(size = 14),
+      axis.title.x = element_text(size = 14,hjust = 0.5), 
+      axis.title.y = element_blank(),#element_text(size = 14),
+      plot.title = element_text( size=14,hjust = 0.5),
+      legend.title = element_blank(), 
+      legend.position = "none",
+      panel.grid.major = element_blank(), 
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.line = element_line(colour = "black")
+    )
+  # Box plot
+  stat.test <- stat.test %>% add_xy_position(x = "type")
+  plotreg [[k]]  = bxp + stat_pvalue_manual(stat.test, label = "p.adj.signif", 
+                                            tip.length = 0.01)
+}
+
+plotregio = plot_grid(plotlist = plotreg,nrow = 2)
+print(plotregio)
+# save picture
+#ggsave(plotregio , file='plotregio.pdf',width = 14, height =8) 
+# save p-value
+#write.table(pval,"postion_pval.txt",sep="\t",row.names= TRUE,col.names = #FALSE,
+#            quote = FALSE)
+```
+
+Visualization of the predicted cell type proportion colocalization of EnDecon.
+
+```{r Coloc,eval = TRUE, echo = TRUE,fig.height = 8, fig.width = 10}
+corr_par = matrix(NA, ncol(EnDecon ), ncol(EnDecon ))
+colnames(corr_par) = rownames(corr_par) = colnames(EnDecon )
+for(i in 1 : ncol(EnDecon )){
+  for(j in 1 : ncol(EnDecon )){
+    corr_par [i,j] = cor( EnDecon  [,i],  EnDecon  [,j])
+  }
+}
+hmat = corr_par
+aa = heatmap(corr_par)
+y <- colnames(hmat)[aa$rowInd]
+x <- colnames(hmat)[aa$colInd]
+jac_heat<- expand.grid(X=x, Y=y)
+jacr_lower = hmat[aa$rowInd,aa$colInd]
+diag(jacr_lower) = NA
+jac_heat$Z <- as.vector(jacr_lower)
+heat_two = ggplot(jac_heat, aes(factor(X), factor(Y), fill= Z)) +  
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(na.omit(jac_heat$Z)), max(na.omit(jac_heat$Z))),
+                       space = "Lab",
+                       na.value = "red",
+                       name="Correlation") +
+  theme_bw()+
+  labs(y=" ",x=" ",title =" ")+
+  theme(axis.ticks.x  = element_blank(), 
+        axis.ticks.y  = element_blank(), 
+        axis.text.x.bottom = element_text(size = 14,hjust = 1,angle = 50), 
+        axis.text.y.left = element_text(size = 14),
+        legend.text = element_text(size = 14,angle= 0.5), 
+        legend.title = element_text(size = 14), #element_blank(),  #element_text(size = 14),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_blank())
+heat_two
+#save picture
+#ggsave(heat_two , file='celltypecorr.pdf',width = 10, height = 8) 
+```
+
+Visualization of the enrichment of predicted cell type proportion from EnDecon in each spots.
+
+```{r Enrichment,eval = TRUE, echo = TRUE,fig.height = 4, fig.width = 8}
+# function for the enrichment
+enrich_prop = function (spot_loc, EnDecon, n){
+  library(abind)
+  npots = nrow(spot_loc)
+  celltype = colnames(EnDecon)
+  region_real = spot_loc$region 
+  region = names(table(region_real))
+  num_region = length(region)
+  num_celltype = length(celltype)
+  ####### the ground truth of the cell type proportion
+  true_prop_region = matrix(NA,num_celltype,num_region)
+  colnames(true_prop_region) = region
+  rownames(true_prop_region) = celltype
+  ind_region =matrix(list(),num_region,1)
+  names(ind_region) = region
+  for(i in 1:num_region){
+    ind_sub = which(region_real==region[i])
+    ind_region[[i]] = ind_sub
+    prop_sub = EnDecon[ind_sub,]
+    true_prop_region[,i] = apply(prop_sub,2,mean)
+  }
+  ################ the permutaion
+  shift_prop_region = matrix(NA,num_celltype,num_region)
+  colnames(shift_prop_region) = region
+  rownames(shift_prop_region) = celltype
+  shift_prop_region_diff = list()
+  for(j in 1:n) {
+    ind_loc_permute <- sample(1:npots, npots)
+    spot_prop_shift = EnDecon[ind_loc_permute,]
+    for(k in 1:num_region){
+      prop_shift = spot_prop_shift[ind_region[[k]] ,]
+      shift_prop_region[,k] = apply(prop_shift,2,mean)
+    }
+    shift_prop_region_diff[[j]] = true_prop_region-shift_prop_region
+  }
+  ######### mean and the standard deviation of the difference
+  mean_diff_temp = do.call(abind,c(shift_prop_region_diff,list(along=3)))
+  mean_diff = apply(mean_diff_temp,1:2,mean)
+  sd_diff =  apply(mean_diff_temp,1:2,sd)
+  enrich_diff = mean_diff /sd_diff
+  return(enrich_diff)
+}
+enrich_res_temp = enrich_prop(spot_loc, EnDecon, 10000)
+enrich_res = t(enrich_res_temp)
+ind_adj = which(enrich_res>0)
+enrich_res_adj = enrich_res
+enrich_res_adj[ind_adj] =1
+enrich_res_adj[-ind_adj] =0
+########the bubble plot
+# the wilcox test
+xs1 = rep(colnames(enrich_res),each=length(rownames(enrich_res)))
+ys1 = rep(rownames(enrich_res),length(colnames(enrich_res)))
+data = data.frame( x = factor(xs1,levels = colnames(enrich_res)), 
+                   y= factor(ys1,levels = rownames(enrich_res)), 
+                   Ratio = as.vector(enrich_res), 
+                   Overlap = as.vector(enrich_res_adj) )
+jac_plot = ggplot(data = data, mapping = aes(x = x, y = y,color = Overlap )) +
+  geom_point(aes(size =  Ratio,color = factor(Overlap)),)+
+  labs(y="",x="",color = "Enrich \n deplet",size= "Effect \n size")+
+  theme_bw()+ 
+  scale_color_manual(values=c( "blue","red"))+
+  theme(
+    axis.text.x.bottom = element_text(size = 14,hjust = 1,angle = 90), 
+    axis.text.y.left = element_text(size = 14),
+    axis.title.x = element_blank(), 
+    axis.title.y = element_blank(),
+    plot.title = element_text( size=14,hjust = 0.5), 
+    legend.text = element_text(size = 8), 
+    legend.title = element_text(size = 10),
+    legend.key.width=unit(0.4,"cm"),
+    legend.key.height=unit(0.4,"cm"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black"),
+    panel.border = element_rect(fill= NULL, color="black", size=0.5, linetype="solid")
+    
+  )
+jac_plot
+#save picture
+#ggsave(jac_plot, file='./figure/jac_plot.pdf',width = 8, height = 4) 
+```
