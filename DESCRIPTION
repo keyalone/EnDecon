@@ -1,0 +1,46 @@
+Package: EnDecon
+Type: Package
+Title: EnDecon: cell type deconvolution of spatially resolved transcriptomics data via ensemble learning
+Version: 0.2.0
+Author: Jian-Juan Tu, Hui-Sheng Li
+Maintainer: Jian-Juan Tu, Hui-Sheng Li<lihs@mails.ccnu.edu.cn>
+Description: EnDecon is an ensemble learning method to estimate cell type abundances within spots for spatially resolved transcriptomics data by borrowing strengths from existing cell type deconvolution methods. EnDecon utilizes an optimization strategy for the combination of the base deconvolution results from twelve individual methods (designed for both bulk RNA-seq and SRT data) to produce a consensus deconvolution result. The current implementation of EnDecon integrates twelve state-of-the-art methods:  CARD, cell2location, DeconRNASeq, DWLS, MuSiC (MuSiC weighted and MuSiC all gene), RCTD, SCDC, SpatialDWLS, SPOTlight,Stereoscope, and SVR.
+Depends: R (>= 3.5.0), pcaMethods
+Imports: methods, 
+         SCDC, 
+         spacexr, 
+         MuSiC, 
+         DeconRNASeq, 
+         DWLS, 
+         Seurat, 
+         SPOTlight,
+         Giotto,
+         spatstat.geom,
+         CARD, 
+         NMF, 
+         utils, 
+         stats, 
+         graphics, 
+         parallel, 
+         doParallel, 
+         foreach,
+         reticulate,
+         Biobase, 
+         data.table, 
+         Matrix,
+         abind, 
+         STdeconvolve
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 7.2.1
+License: GPL(>= 2)
+Encoding: UTF-8
+LazyData: true
+biocViews:
+Remotes:
+      renozao/xbioc,
+      meichendong/SCDC,
+      dmcable/spacexr,
+      xuranw/MuSiC,
+      RubD/Giotto,
+      YingMa0107/CARD
