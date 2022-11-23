@@ -11,8 +11,8 @@ a large matrix
 data(breast.st)
 }
 \description{
-We obtain the filtered human breast cancers scRNA-seq dataset from 
-[Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>). 
+We obtain the filtered human breast cancers scRNA-seq dataset from
+[Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>).
 The dataset contains the expression levels of 11920 genes and 306 spots.
 }
 \examples{

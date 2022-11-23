@@ -1,8 +1,8 @@
 #' raw count matrix of reference scRNA-seq dataset
 #'
-#' We obtain the filtered human breast cancers scRNA-seq dataset from 
-#' [Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>) 
-#' The dataset contains the expression levels of 11920 genes and 3024 cells. 
+#' We obtain the filtered human breast cancers scRNA-seq dataset from
+#' [Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>)
+#' The dataset contains the expression levels of 11920 genes and 3024 cells.
 #'
 #' @name breast.sc.ref
 #' @docType data
@@ -28,10 +28,10 @@
 
 
 #' raw count matrix of spatial transcriptomics data
-#' 
-#' We obtain the filtered human breast cancers scRNA-seq dataset from 
-#' [Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>). 
-#' The dataset contains the expression levels of 11920 genes and 306 spots. 
+#'
+#' We obtain the filtered human breast cancers scRNA-seq dataset from
+#' [Zenodo data repository] (<https://doi.org/10.5281/zenodo.4739739>).
+#' The dataset contains the expression levels of 11920 genes and 306 spots.
 #'
 #' @name breast.st
 #' @docType data
@@ -57,3 +57,18 @@
 #' data(breast.st.loc)
 #'
 "breast.st.loc"
+
+#' The annotation of spots of breast cancer data
+#'
+#' 109 spots in connective tissue, 7 spots in immune infiltrate, 139 spots in invasive cancer, 51 spots in undermined.
+#' The breast.spot.annotation just for the down-streaming analysis.
+#' @name breast.spot.annotation
+#'
+#' @docType data
+#' @usage data(breast.spot.annotation)
+#' @keywords datasets
+#' @format a vector
+#' @examples
+#' data(breast.spot.annotation)
+#'
+"breast.spot.annotation"
