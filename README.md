@@ -1,8 +1,11 @@
 # EnDecon
 EnDecon integrates multiple base deconvolution results using a weighted optimization model to generate a more accurate result. EnDecon mainly includes two steps: (1) running each base deconvolution method individually to obtain the base cell type deconvolution results, and (2) integrating these base deconvolution results into a better deconvolution result using a new proposed ensemble strategy. EnDecon obtains the ensemble result by alternatively updating the ensemble result as a weighted median of the base deconvolution results and the weights of base results based on their distance from the ensemble result. R package applies ensemble learning for the deconvolution of spatial transcriptomic data. 
-![Trivia screenshot](https://github.com/keyalone/EnDecon/tree/master/docs/Figure1.png)
-![Trivia screenshot](https://github.com/keyalone/EnDecon/tree/master/docs/Figure2.png)
-![Trivia screenshot](https://github.com/keyalone/EnDecon/tree/master/docs/Figure3.png)
+![alt
+text](https://github.com/keyalone/EnDecon/blob/main/docs/Figure1.png?raw=true)
+![alt
+text](https://github.com/keyalone/EnDecon/blob/main/docs/Figure2.png?raw=true)
+![alt
+text](https://github.com/keyalone/EnDecon/blob/main/docs/Figure3.png?raw=true)
 The EnDecon package has the main following R-package dependencies: SCDC, spacexr, MuSiC, DeconRNASeq, DWLS, Seurat, SPOTlight, Giotto, STdeconvolve, spatstat.geom, CARD, parallel, doParallel, foreach, reticulate and several python packages: scvi-tools, cell2location, scanpy, anndata. For the R-package dependencies, you can load on most of R dependencies packages on your R when install the EnDecon R package by run the code:
  ``` buildoutcfg
  devtools::install_github("Zhangxf-ccnu/EnDecon")
