@@ -1,3 +1,12 @@
+---
+title: "EnDecon"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{EnDecon}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
 # EnDecon: Quick Start
 
 Do you like to live in the fast lane? Do you sigh every time you see a long vignette? Do you wish there was a TLDR on everything?
@@ -33,7 +42,7 @@ First, let's load the package and the data. We focus on human breast cancer data
 
 For data process of the dataset, include reference scRNA-seq data, cell type annotation, spatial transcriptomic data and spot location, users could use the data_process function as following:
 
-```{r loading, eval = TRUE, echo = TRUE}
+```{r}
 suppressMessages(library(EnDecon))
 data("breast.sc.ref")
 data("breast.sc.cell.label")
@@ -46,7 +55,7 @@ database <- data_process(sc_exp = breast.sc.ref, sc_label = breast.sc.cell.label
 
 The current implementation of EnDecon combines fourteen state-of-the- art cell type deconvolution methods (consisting of methods designed for both bulk RNA-seq and scRNA-seq dataset): CARD, Cell2location, DeconRNASeq, DWLS, SVR, MuSiC, RCTD, SCDC, SpatialDWLS, SPOTlight, Stereoscope, STdeconvolve and DestVI. We summarizes the accuracy, including PCC, RMSE and JSD, and running times of the base deconvolution methods for simulation data in our supplementary material. Users could run all methods or choose several methods for the ensemble learning.
 
-```{r loading, eval = TRUE, echo = TRUE}
+```{r}
 # we advise user should construct the python env by anaconda and give the path to the #"python_env" parameter.
 python_env <- "~/.conda/envs/EnDecon_GPU/bin/python"
 Results.dec.mouse <- EnDecon_individual_methods(sc_exp = breast.sc.ref, sc_label = breast.sc.cell.label, spot_exp = breast.st, spot_loc = breast.st.loc, python_env = python_env,
@@ -57,7 +66,7 @@ use_gpu = TRUE,gene_det_in_min_cells_per = 0.01, RCTD.CELL_MIN_INSTANCE = 5, sav
 
 Ensemble learning based on the base deconvolution results
 
-```{r loading, eval = TRUE, echo = TRUE}
+```{r}
 pred.weight.ensemble <- Sys.time()
 Results <- solve_ensemble(Results.Deconv = Results.dec.mouse[[1]], lambda = NULL, prob.quantile = 0.5)
 end.weight.ensemble <- Sys.time()
@@ -80,7 +89,7 @@ names(Results.dec.mouse[[2]]) <- method_names
 
 Visualization of the cell type abundance in each spots of EnDecon
 
-```{r EnDecon_pie,eval = TRUE, echo = TRUE,fig.height = 5, fig.width = 7}
+```{r,fig.height = 5, fig.width = 7}
 library(RColorBrewer)
 library(ggplot2)
 library(scatterpie)
@@ -144,7 +153,7 @@ print(p2)
 
 Visualization of the cell type abundance in each spots of base deconvolution methods
 
-```{r base_deconv_pie,eval = TRUE, echo = TRUE,fig.height = 12, fig.width = 16}
+```{r,fig.height = 12, fig.width = 16}
 ########### pie plot of base deconvolution methods ###############
 name_EnDecon = names(EnDecon_res)
 plots =list()
@@ -187,7 +196,7 @@ print(pfig)
 
 Visualization of the comparisons of predicted cell type proportions of EnDecon in cancer, connective and immune regions
 
-```{r com_region,eval = TRUE, echo = TRUE,fig.height = 8, fig.width = 14}
+```{r,fig.height = 8, fig.width = 14}
 anno_type = names(table(spot_loc[,3]))
 ind_caner = which(spot_loc[,3] == anno_type[3])
 ind_conn = which(spot_loc[,3] == anno_type[1])
@@ -250,7 +259,7 @@ print(plotregio)
 
 Visualization of the predicted cell type proportion colocalization of EnDecon.
 
-```{r Coloc,eval = TRUE, echo = TRUE,fig.height = 8, fig.width = 10}
+```{r}
 corr_par = matrix(NA, ncol(EnDecon ), ncol(EnDecon ))
 colnames(corr_par) = rownames(corr_par) = colnames(EnDecon )
 for(i in 1 : ncol(EnDecon )){
@@ -292,7 +301,7 @@ heat_two
 
 Visualization of the enrichment of predicted cell type proportion from EnDecon in each spots.
 
-```{r Enrichment,eval = TRUE, echo = TRUE,fig.height = 4, fig.width = 8}
+```{r,fig.height = 4, fig.width = 8}
 # function for the enrichment
 enrich_prop = function (spot_loc, EnDecon, n){
   library(abind)
