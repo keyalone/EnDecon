@@ -81,6 +81,11 @@ CARD
 '''buildoutcfg
 devtools::install_github('YingMa0107/CARD')
 '''
+STdeconvolve
+'''buildoutcfg
+require(remotes)
+remotes::install_github('JEFworks-Lab/STdeconvolve')
+'''
 parallel and doParallel
 '''buildoutcfg
 install.packages("parallel")
