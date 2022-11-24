@@ -106,7 +106,7 @@ Results.Deconv <- EnDecon_individual_methods(MVC.reference, MVC.reference.cell.l
                   SpatialDWLS.is_select_DEGs = FALSE)
 ensemble.results <- solve_ensemble(Results.Deconv)
 ```
-#Tutorials
+## Tutorials
 [Analysis of breast cancer data with `EnDecon`](https://github.com/keyalone/EnDecon/blob/master/docs/EnDecon.md)
 
 Please do not hesitate to contact Prof. Zhang at zhangxf@ccnu.edu.cn to seek any clarifications regarding any content or operation of the archive.
