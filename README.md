@@ -78,19 +78,19 @@ spatstat.geom
 install.packages("spatstat.geom")
 ```
 CARD
-'''buildoutcfg
+```buildoutcfg
 devtools::install_github('YingMa0107/CARD')
-'''
+```
 STdeconvolve
-'''buildoutcfg
+```buildoutcfg
 require(remotes)
 remotes::install_github('JEFworks-Lab/STdeconvolve')
-'''
+```
 parallel and doParallel
-'''buildoutcfg
+```buildoutcfg
 install.packages("parallel")
 install.packages("doParallel")
-'''
+```
 reticulate
 ```buildoutcfg
 Install.packages('reticulate')
