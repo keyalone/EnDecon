@@ -97,19 +97,18 @@ Install.packages('reticulate')
 ```
 ## Run the example
 ```buildoutcfg
-data("MVC.reference")
-data("MVC.reference.cell.label")
-data("MVC.ST")
-data("MVC.ST.coor")
+data("breast.sc.ref")
+data("breast.sc.cell.label")
+data("breast.st")
+data("breast.st.loc")
 ##### path on ubuntu platform on our computer
 python_env <- "~/.conda/envs/EnDecon_GPU/bin/python"
-##### we use all the genes for the deconvolutioin
-Results.Deconv <- EnDecon_individual_methods(MVC.reference, MVC.reference.cell.label,
-                  MVC.ST, MVC.ST.coor,  python_env = python_env, use_gpu = TRUE,
-                  RCTD.CELL_MIN_INSTANCE = 10, gene_det_in_min_cells_per = 0,
-                  expression_threshold = 0, nUMI = 1, DWLS.is_select_DEGs = FALSE,
-                  SpatialDWLS.is_select_DEGs = FALSE)
-ensemble.results <- solve_ensemble(Results.Deconv)
+Results.dec.mouse <- EnDecon_individual_methods(sc_exp = breast.sc.ref,
+sc_label = breast.sc.cell.label, spot_exp = breast.st,
+spot_loc = breast.st.loc, python_env = python_env,
+use_gpu = TRUE,gene_det_in_min_cells_per = 0.01,
+RCTD.CELL_MIN_INSTANCE = 5, saving_results = FALSE)
+ensemble.results <- solve_ensemble(Results.dec.mouse[[1]])
 ```
 ## Tutorials
 [Analysis of breast cancer data with `EnDecon`](https://github.com/keyalone/EnDecon/blob/master/docs/EnDecon.md)
