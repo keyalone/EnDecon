@@ -107,7 +107,7 @@ use_gpu = TRUE,gene_det_in_min_cells_per = 0.01,
 RCTD.CELL_MIN_INSTANCE = 5, saving_results = FALSE)
 ensemble.results <- solve_ensemble(Results.dec.mouse[[1]])
 ```
-## Overview for the selection of base deconvolution methods
+## Recommendation for the selection of base deconvolution methods
 
 ![alt
 text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure2.png?raw=true)
