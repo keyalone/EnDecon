@@ -120,8 +120,9 @@ text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure5.png?raw=true)
 For a computational method, the accuracy is important, but the running time also needs to be considered. Therefore, we also report the computational time requirement for the deconvolution methods. To obtain the running time, we run the deconvolution methods on a workstation with Intel core i7-10700 CPU (2.90GHz*16), 64 RAM and RTX 3080 GPU. We use the simulation data in Scenario 1 and Senirao2 and SRT with different downsampling rates of scRNA-seq data to show the accuracy and running time of deconvolution methods. The boxplots show that all individual deconvolution methods can be finished in less than 50 minutes. Cell2location, DestVI, DWLS and Stereoscope require more time than other methods. For the tables, we find that the running time of DestVI and Stereoscope is sensitive to sample size of reference scRNA-seq data. As the number of cells in scRNA-seq increases, the longer time requirement of the methods than other deconvolution methods. Note that after running the individual deconvolution methods, EnDecon can integrate the results from individual methods in a short time. Besides, we also provide the overview of the deconvolution methods in terms of PCC, 1-RMSE, 1-JSD and running time on the dataset for users to select appropriate deconvolution methods for ensemble learning.
 
 ## Tutorials
-[Analysis of Scenario 1 data with `EnDecon`](https://github.com/keyalone/EnDecon/blob/master/docs/simulation.md)
-[Analysis of breast cancer data with `EnDecon`](https://github.com/keyalone/EnDecon/blob/master/docs/EnDecon.md)
+- [Analysis of Scenario 1 data with `EnDecon`](https://github.com/keyalone/EnDecon/blob/master/docs/simulation.md)
+
+- [Analysis of breast cancer data with `EnDecon`](https://github.com/keyalone/EnDecon/blob/master/docs/EnDecon.md)
 
 Please do not hesitate to contact Prof. Zhang at zhangxf@ccnu.edu.cn to seek any clarifications regarding any content or operation of the archive.
 
