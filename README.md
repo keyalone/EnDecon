@@ -33,6 +33,7 @@ If you want to run the DWLS, SpatialDWLS, Stereoscope and cell2location for the 
 ```
 After install the python dependencies, the user need to get the path of environment of conda and set the path to the python_env variable in the function of EnDecon_individual_methods in our package. The path is similar to "\~/.conda/envs/EnDecon\_env/bin/python" on the ubuntu and "\~/anaconda3/envs/EnDecon\_env/python.ext" on Windows.
 * **Install R dependencies**
+
 SCDC
 ```buildoutcfg
 install.packages("remotes")
