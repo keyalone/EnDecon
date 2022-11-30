@@ -13,7 +13,7 @@ However, if the dependencies are not installed correctly, please install them by
 * **Install python dependencies**
  ``` buildoutcfg
  ### construct EnDecon python environment with pytorch GPU version 
- conda env create -f requirments_GPU.yml
+ conda env create -f requirments_EnDecon_GPU.yml
  ### construct EnDecon python environment with pytorch CPU version
  conda env create -f requirments_EnDecon_CPU.yml
 ```
