@@ -111,13 +111,13 @@ ensemble.results <- solve_ensemble(Results.dec.mouse[[1]])
 ## Recommendation for the selection of base deconvolution methods
 
 ![alt
-text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure2.png?raw=true)
-![alt
 text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure4.png?raw=true)
 ![alt
-text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure3.png?raw=true)
+text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure2.png?raw=true)
 ![alt
 text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure5.png?raw=true)
+![alt
+text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure3.png?raw=true)
 For a computational method, the accuracy is important, but the running time also needs to be considered. Therefore, we also report the computational time required for the deconvolution methods. To obtain the running time, we run the deconvolution methods on a workstation with Intel core i7-10700 CPU (2.90GHz*16), 64 RAM and RTX 3080 GPU. The first picture presents the running times of the 14 individual methods as well as our ensemble process on the six datasets across the three scenarios in the simulation experiments. Cell2location, DestVI, DWLS and Stereoscope require more time than other methods. Note that after running the individual deconvolution methods, EnDecon can integrate the results from individual methods in a short time. In addition, we also provide an overview of the deconvolution methods in terms of PCC, 1-RMSE, 1-JSD and running time on all simulated datasets (the second, third and fourth picture) for the users to select appropriate individual deconvolution methods for integration.
 
 ## Tutorials
