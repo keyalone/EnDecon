@@ -15,7 +15,7 @@ However, if the dependencies are not installed correctly, please install them by
  ### construct EnDecon python environment with pytorch GPU version 
  conda env create -f requirments_GPU.yml
  ### construct EnDecon python environment with pytorch CPU version
- conda env create -f requirment_EnDecon_CPU.yml
+ conda env create -f requirments_EnDecon_CPU.yml
 ```
 If you want to run the DWLS, SpatialDWLS, Stereoscope and cell2location for the ensemble learning, we advise that the user should install [anaconda]( https://www.anaconda.com/) and run the upper command on the terminal (ubuntu)/CMD (windows) to install the python dependencies for running the methods. In our application, due to the computer with RTX3080 GPU, we install the [pytorch with cudatookit]( https://pytorch.org/). If you don’t want to use the *.yml provided. You can install the python dependencies by the following code.
 ```buildoutcfg
