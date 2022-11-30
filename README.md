@@ -27,7 +27,7 @@ If you want to run the DWLS, SpatialDWLS, Stereoscope and cell2location for the 
  pip install networkx
  pip install leidenalg
  pip install community
- pip install  smfishHmrf
+ pip install smfishHmrf
  pip install scikit-learn
 # install pytorch with CPU or GPU version
 ```
