@@ -38,7 +38,7 @@ SCDC
 ```buildoutcfg
 install.packages("remotes")
   remotes::install_github("renozao/xbioc")
-install.package("devtools")
+install.packages("devtools")
   devtools::install_github("meichendong/SCDC")
 ```
 RCTD
