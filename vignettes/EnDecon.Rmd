@@ -83,6 +83,12 @@ Results.dec.mouse[[1]] <- Results.dec.mouse[[1]][method_index]
 names(Results.dec.mouse[[1]]) <- method_names
 Results.dec.mouse[[2]] <- Results.dec.mouse[[2]][method_index]
 names(Results.dec.mouse[[2]]) <- method_names
+### change cell type name just consistent with the figure in the article
+cell.type.names <- c("B cells", "CAFs", "Epithelial", "Endothelial", "Myeloid", "Plasmablasts" ,
+                     "PVL", "T cells")
+for (i in 1:length(Results.dec.mouse[[1]])) {
+  colnames(Results.dec.mouse[[1]][[i]]) <- cell.type.names
+}
 ```
 
 # Visualization
@@ -196,7 +202,7 @@ print(pfig)
 
 Visualization of the comparisons of predicted cell type proportions of EnDecon in cancer, connective and immune regions
 
-```{r,fig.height = 8, fig.width = 14}
+```{r,fig.height = 10, fig.width = 14}
 anno_type = names(table(spot_loc[,3]))
 ind_caner = which(spot_loc[,3] == anno_type[3])
 ind_conn = which(spot_loc[,3] == anno_type[1])
@@ -215,7 +221,7 @@ for( k in 1: length(celltype)){
   pval[k,1] = wilcox.test( cancer_prop ,conn_prop)$p.value
   pval[k,2] = wilcox.test( cancer_prop ,immu_prop )$p.value
   pval[k,3] = wilcox.test( conn_prop ,immu_prop )$p.value
-  region = c("Cancer","Connective","Immune")
+  region = c("Invasive cancer","Connective tissue","Immune infiltrate")
   reg_lable =  rep(region,c(length(cancer_prop),length(conn_prop)
                             ,length(immu_prop )))
   data_regcan = data.frame(porp = c(cancer_prop,conn_prop,immu_prop),
@@ -241,6 +247,9 @@ for( k in 1: length(celltype)){
       panel.grid.minor = element_blank(),
       panel.border = element_blank(),
       axis.line = element_line(colour = "black")
+    ) + scale_x_discrete(
+      breaks = c("Invasive cancer", "Connective tissue", "Immune infiltrate"),
+      label = c("Invasive \n cancer", "Connective \n tissue", "Immune \n infiltrate")
     )
   # Box plot
   stat.test <- stat.test %>% add_xy_position(x = "type")
@@ -346,10 +355,13 @@ enrich_prop = function (spot_loc, EnDecon, n){
 }
 enrich_res_temp = enrich_prop(spot_loc, EnDecon, 10000)
 enrich_res = t(enrich_res_temp)
+### change names of enrich_res just consistent with the figure of article
+enrich_res <- enrich_res[,seq(from = ncol(enrich_res), to = 1, by = -1)]
+rownames(enrich_res) <- c("CT", "II", "IC", "UN")
 ind_adj = which(enrich_res>0)
 enrich_res_adj = enrich_res
-enrich_res_adj[ind_adj] =1
-enrich_res_adj[-ind_adj] =0
+enrich_res_adj[ind_adj] = "Depleted"
+enrich_res_adj[-ind_adj] = "Enriched"
 ########the bubble plot
 # the wilcox test
 xs1 = rep(colnames(enrich_res),each=length(rownames(enrich_res)))
@@ -357,14 +369,14 @@ ys1 = rep(rownames(enrich_res),length(colnames(enrich_res)))
 data = data.frame( x = factor(xs1,levels = colnames(enrich_res)), 
                    y= factor(ys1,levels = rownames(enrich_res)), 
                    Ratio = as.vector(enrich_res), 
-                   Overlap = as.vector(enrich_res_adj) )
-jac_plot = ggplot(data = data, mapping = aes(x = x, y = y,color = Overlap )) +
+                   Overlap = as.vector(enrich_res_adj))
+jac_plot = ggplot(data = data, mapping = aes(x = y, y = x,color = Overlap )) +
   geom_point(aes(size =  Ratio,color = factor(Overlap)),)+
-  labs(y="",x="",color = "Enrich \n deplet",size= "Effect \n size")+
+  labs(y="",x="",color = "Direction",size= "Effect \n size")+
   theme_bw()+ 
-  scale_color_manual(values=c( "blue","red"))+
+  scale_color_manual(values=c("blue","red"))+
   theme(
-    axis.text.x.bottom = element_text(size = 14,hjust = 1,angle = 90), 
+    axis.text.x.bottom = element_text(size = 14), 
     axis.text.y.left = element_text(size = 14),
     axis.title.x = element_blank(), 
     axis.title.y = element_blank(),
@@ -377,7 +389,6 @@ jac_plot = ggplot(data = data, mapping = aes(x = x, y = y,color = Overlap )) +
     panel.grid.minor = element_blank(),
     axis.line = element_line(colour = "black"),
     panel.border = element_rect(fill= NULL, color="black", size=0.5, linetype="solid")
-    
   )
 jac_plot
 #save picture
