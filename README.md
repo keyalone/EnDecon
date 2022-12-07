@@ -37,9 +37,9 @@ After install the python dependencies, the user need to get the path of environm
 SCDC
 ```buildoutcfg
 install.packages("remotes")
-  remotes::install_github("renozao/xbioc")
+remotes::install_github("renozao/xbioc")
 install.packages("devtools")
-  devtools::install_github("meichendong/SCDC")
+devtools::install_github("meichendong/SCDC")
 ```
 RCTD
 ```buildoutcfg
