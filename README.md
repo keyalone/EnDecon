@@ -1,4 +1,6 @@
 # EnDecon
+R package supporting the paper **"EnDecon: cell type deconvolution of spatiallyresolved transcriptomics data via ensemble learning"**. 
+
 EnDecon integrates multiple base deconvolution results using a weighted optimization model to generate a more accurate result. EnDecon mainly includes two steps: (1) running each base deconvolution method individually to obtain the base cell type deconvolution results, and (2) integrating these base deconvolution results into a better deconvolution result using a new proposed ensemble strategy. EnDecon obtains the ensemble result by alternatively updating the ensemble result as a weighted median of the base deconvolution results and the weights of base results based on their distance from the ensemble result. R package applies ensemble learning for the deconvolution of spatial transcriptomic data. 
 ![alt
 text](https://github.com/keyalone/EnDecon/blob/master/docs/Figure1.png?raw=true)
