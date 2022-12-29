@@ -103,12 +103,24 @@ data("breast.st")
 data("breast.st.loc")
 ##### path on ubuntu platform on our computer
 python_env <- "~/.conda/envs/EnDecon_GPU/bin/python"
+# Run 14 individual deconvolution methods with default setting
 Results.dec.mouse <- EnDecon_individual_methods(sc_exp = breast.sc.ref,
 sc_label = breast.sc.cell.label, spot_exp = breast.st,
 spot_loc = breast.st.loc, python_env = python_env,
 use_gpu = TRUE,gene_det_in_min_cells_per = 0.01,
 RCTD.CELL_MIN_INSTANCE = 5, saving_results = FALSE)
 ensemble.results <- solve_ensemble(Results.dec.mouse[[1]])
+## User could choose individual deconvolution methods for ensemble learning by setting the parameters
+## for example, we could use the following code running the cell2location, RCTD and CARD for ensemble learning
+#Results.dec.mouse <- EnDecon_individual_methods(sc_exp = breast.sc.ref,
+#sc_label = breast.sc.cell.label, spot_exp = breast.st,
+#spot_loc = breast.st.loc, python_env = python_env,
+#use_gpu = TRUE,gene_det_in_min_cells_per = 0.01,
+#RCTD.CELL_MIN_INSTANCE = 5, saving_results = FALSE, 
+#SCDC = FALSE, RCTD = TRUE, MuSiC = FALSE, DeconRNASeq = FALSE,
+#DestVI = FALSE, DWLS = FALSE, SPOTlight = FALSE, SpatialDWLS = FALSE,
+#Stereoscope = FALSE, cell2location = TRUE, CARD = TRUE, STdeconvolve = FALSE)
+#ensemble.results <- solve_ensemble(Results.dec.mouse[[1]])
 ```
 ## Recommendation for the selection of base deconvolution methods
 
