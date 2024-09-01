@@ -129,6 +129,7 @@ SCDC_run = function(database, iter.max = 1000){
   sc_pData <- data.frame(as.character(sc_label), as.character(colnames(sc_exp)))
   colnames(sc_pData) <- c('cluster', 'sample')
   rownames(sc_pData) <- colnames(sc_exp)
+  cat(paste0('SCDC scref num: ',length(rownames(sc_pData))))
   sc_phenoData <- methods::new("AnnotatedDataFrame", data=sc_pData, varMetadata=sc_metadata)
   sc_exp_es <- Biobase::ExpressionSet(as.matrix(sc_exp), phenoData=sc_phenoData, byrow=FALSE)
 
@@ -178,8 +179,8 @@ RCTD_run = function(database, CELL_MIN_INSTANCE = 20){
   nUMI <- colSums(spot_exp)
   puck <- spacexr::SpatialRNA(coords, counts=sparse_spot_exp, nUMI=nUMI)
 
-  myRCTD <- suppressMessages(spacexr::create.RCTD(puck, reference, max_cores = 1,CELL_MIN_INSTANCE = CELL_MIN_INSTANCE))
-  myRCTD <- suppressMessages(spacexr::run.RCTD(myRCTD, doublet_mode = 'full'))
+  myRCTD <- spacexr::create.RCTD(puck, reference, max_cores = 1,CELL_MIN_INSTANCE = CELL_MIN_INSTANCE, UMI_min=5, counts_MIN = 1)
+  myRCTD <- spacexr::run.RCTD(myRCTD, doublet_mode = 'full')
   results <- myRCTD@results
 
   temp <- as.matrix(results$weights)
@@ -204,18 +205,30 @@ MuSiC_run = function(database, iter.max = 1000, nu = 1e-04, eps = 0.01){
     sc_label_num[sc_label == sort(unique(sc_label))[k]] <- k
   }
 
-  sc_metadata <- data.frame(labelDescription=c('Sample ID','Subject Name','Cell Type ID ', 'Cell Type Name'),
-                            row.names=c('sampleID','SubjectName','cellTypeID ','cellType'))
+  # sc_metadata <- data.frame(labelDescription=c('Sample ID','Subject Name','Cell Type ID ', 'Cell Type Name'),
+  #                           row.names=c('sampleID','SubjectName','cellTypeID ','cellType'))
 
 
   sc_pData <- data.frame(as.numeric(c(1:dim(sc_exp)[2])), as.factor(colnames(sc_exp)),
                          as.numeric(sc_label_num), as.factor(sc_label))
   colnames(sc_pData) <- c('sampleID', 'SubjectName', 'cellTypeID ', 'cellType')
   rownames(sc_pData) <- colnames(sc_exp)
-  sc_phenoData <- methods::new("AnnotatedDataFrame", data = sc_pData,
-                               varMetadata=sc_metadata)
-  sc_exp_es <- Biobase::ExpressionSet(as.matrix(sc_exp),
-                                      phenoData=sc_phenoData, byrow=FALSE)
+  # sc_phenoData <- methods::new("AnnotatedDataFrame", data = sc_pData,
+  #                              varMetadata=sc_metadata)
+  # sc_exp_es <- Biobase::ExpressionSet(as.matrix(sc_exp),
+  #                                     phenoData=sc_phenoData, byrow=FALSE)
+
+  # normcounts <- normalized(sc_exp, method = norm.form)
+  sce <- SingleCellExperiment::SingleCellExperiment(assays = list(counts = sc_exp))
+  gene_df <- data.frame(gene.name = rownames(sce))
+  # cell_df <- data.frame(label = sc_label, cell = colnames(sce))
+  rownames(gene_df) <- gene_df$Gene
+  # rownames(cell_df) <- cell_df$cell
+  cat(paste0('MuSiC scref num: ', dim(sc_exp)))
+  sce <- SingleCellExperiment::SingleCellExperiment(assays = list(counts = sc_exp),
+                                                      colData = sc_pData,
+                                                      rowData = gene_df)
+
 
   st_metadata <- data.frame(labelDescription=c('Sample ID','Subject Name'), row.names=c('sampleID','SubjectName'))
   st_pData <- data.frame(as.integer(c(1:dim(spot_exp)[2])), as.factor(colnames(spot_exp)))
@@ -223,8 +236,10 @@ MuSiC_run = function(database, iter.max = 1000, nu = 1e-04, eps = 0.01){
   rownames(st_pData) <- colnames(spot_exp)
   st_phenoData <- methods::new("AnnotatedDataFrame", data=st_pData,varMetadata=st_metadata)
   spot_exp_es <- Biobase::ExpressionSet(as.matrix(spot_exp),phenoData= st_phenoData, byrow=FALSE)
+  bulk.mtx = exprs(spot_exp_es)
+
   #### MuSiC version = 0.2.0
-  Est.prop.GSE = MuSiC::music_prop(bulk.eset = spot_exp_es, sc.eset = sc_exp_es,
+  Est.prop.GSE = MuSiC::music_prop(bulk.mtx = bulk.mtx, sc.sce = sce,
                                    clusters = 'cellType',
                                    samples = 'sampleID', select.ct = cell_type, verbose = F,
                                    iter.max = iter.max, nu = nu, eps = eps)
@@ -279,13 +294,14 @@ DeconRNASeq_run = function(database, perc = 0.05){
   return(DeconRNASeq_results)
 }
 
+
 ########## run DWLS and SVR ##############
 DWLS_run = function(database, parallel = TRUE,  is_select_DEGs = TRUE, python_env){
 
   ### extract SC, CL, ST from database
-  sc_exp <- database$sc_exp * 1e-4
+  sc_exp <- database$sc_exp
   sc_label <- database$sc_label
-  spot_exp <- database$spot_exp * 1e-4
+  spot_exp <- database$spot_exp
   cell_type <- sort(unique(sc_label))
 
 
@@ -313,6 +329,7 @@ DWLS_run = function(database, parallel = TRUE,  is_select_DEGs = TRUE, python_en
                            cellType = sc_label)
 
   cell_type_exp <- create_group_exp(sc_exp,sc_label)
+  cat(paste0('DWLS cell_type_exp dim : ', dim(cell_type_exp)))
 
   if(parallel){
     #### because the cores can't large than 2 in using R CMD check processing
@@ -658,7 +675,8 @@ cell2location_run <- function(database, python_env = NULL,
   adata_sc <- input_for_py(expr = sc_exp, cell_type = sc_label)
   cell2loc$models$RegressionModel$setup_anndata(adata_sc, labels_key = "cell_type")
   mod <- cell2loc$models$RegressionModel(adata_sc)
-
+  
+  cat(paste0('ncol(sc_exp)=', ncol(sc_exp)))
   if(ncol(sc_exp) > 10000){
     batch_size <- as.integer(2500)
   }else{
@@ -689,7 +707,8 @@ cell2location_run <- function(database, python_env = NULL,
   ### extracted high confident cell abundance
   adata_temp <- reticulate::py_to_r(adata_st)
   data_frame_total <- adata_temp$obsm["q05_cell_abundance_w_sf"]
-  slice_idx_tmp <- adata_temp$uns['mod']['factor_names']$factor_names
+  # slice_idx_tmp <- adata_temp$uns['mod']['factor_names']$factor_names
+  slice_idx_tmp <- adata_temp$uns$mod$factor_names
   slice_idx <- paste0("q05cell_abundance_w_sf_", slice_idx_tmp)
   data_frame_extracted <- data_frame_total[slice_idx]
   names(data_frame_extracted) <- slice_idx_tmp
@@ -835,7 +854,8 @@ input_for_py <- function(expr, cell_type = NULL){
 data_frame_extracted <- function(adata){
   adata <- reticulate::py_to_r(adata)
   data_frame_total <- adata$varm['means_per_cluster_mu_fg']
-  slice_idx_tmp <- adata$uns['mod']['factor_names']$factor_names
+  # slice_idx_tmp <- adata$uns['mod']['factor_names']$factor_names
+  slice_idx_tmp <- adata$uns$mod$factor_names
   slice_idx <- paste0("means_per_cluster_mu_fg_", slice_idx_tmp)
   data_frame_extracted <- data_frame_total[slice_idx]
   names(data_frame_extracted) <- slice_idx_tmp
@@ -1030,7 +1050,7 @@ EnDecon_individual_methods <- function(sc_exp, sc_label, spot_exp, spot_loc,
 
   K <- length(Methods.used)
 
-  database <- data_process (sc_exp, sc_label, spot_exp, spot_loc, gene_det_in_min_cells_per, expression_threshold, nUMI, verbose, plot)
+  database <- data_process(sc_exp, sc_label, spot_exp, spot_loc, gene_det_in_min_cells_per, expression_threshold, nUMI, verbose, plot)
 
   Results.Deconv <- list()
 
